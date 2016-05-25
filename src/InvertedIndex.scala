@@ -122,8 +122,14 @@ object InvertedIndex {
       })
         .groupByKey()
         .map(pair => {
-          var value = pair._2.toString()
-          if (pair._2.size < 10 && pair._2.contains("1341876933:898885"))
+          var value = new String("")
+          val itr = pair._2.toIterator
+          while (itr.hasNext) {
+            value += itr.next()
+            value += ","
+          }
+          value = value.substring(0, value.length)
+          if (value.contains("1341876933:898885"))
             value += "*"
           (pair._1, value)
         })
@@ -146,7 +152,7 @@ object InvertedIndex {
       var list = List[Long]()
       for (o <- output) {
         if (o._1._2.substring(o._1._2.length - 1).equals("*")) {
-          println(o._1._1 + ": " + o._1._2 + " - " + o._2)
+//          println(o._1._1 + ": " + o._1._2 + " - " + o._2)
           list = o._2 :: list
         }
       }
@@ -180,7 +186,7 @@ object InvertedIndex {
       linRdd = linRdd.goNext()
 
       val showMeRdd = linRdd.show().toRDD
-/*
+
       val mappedRDD = showMeRdd.map(s => {
         val str = s.toString
         val index = str.lastIndexOf(",")
@@ -222,14 +228,15 @@ object InvertedIndex {
 //        delta_debug.ddgen(lineageResult, new Test,
 //          new Split, lm, fh)
 //      } else {
-        val delta_debug = new DD_NonEx[(String, String), Long]
-        val returnedRDD = delta_debug.ddgen(mappedRDD, new Test, new Split, lm, fh)
+      val delta_debug = new DD_NonEx[(String, String), Long]
+      val returnedRDD = delta_debug.ddgen(mappedRDD, new Test, new Split, lm, fh)
 //      }
       val ss = returnedRDD.collect()
       linRdd = wordDoc.getLineage()
       linRdd.collect
       linRdd = linRdd.goBack().goBack().filter(l => {
-        if(l.asInstanceOf[(Int, Int)]._2 == ss(0)._2.toInt){
+//        println("*** => " + l)
+        if(l.asInstanceOf[((Int, Int), (Int, Int))]._2._2 == ss(0)._2.toInt){
           println("*** => " + l)
           true
         }else false
@@ -244,7 +251,10 @@ object InvertedIndex {
       val DeltaDebuggingEndTimestamp = new java.sql.Timestamp(Calendar.getInstance.getTime.getTime)
       logger.log(Level.INFO, "DeltaDebugging (unadjusted) ends at " + DeltaDebuggingEndTimestamp)
       logger.log(Level.INFO, "DeltaDebugging (unadjusted) takes " + (DeltaDebuggingEndTime - DeltaDebuggingStartTime)/1000 + " milliseconds")
-*/
+
+      //total time
+      logger.log(Level.INFO, "Record total time: Delta-Debugging + Linegae + goNext:" + (DeltaDebuggingEndTime - LineageStartTime)/1000 + " microseconds")
+
 
       println("Job's DONE! WORKS!")
       ctx.stop()
